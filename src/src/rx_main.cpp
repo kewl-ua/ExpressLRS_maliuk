@@ -2063,6 +2063,7 @@ void loop()
     
     // Обновление OLED дисплея
     static uint32_t lastDisplayUpdate = 0;
+
     if (now - lastDisplayUpdate > 1000) {
         rxDisplay.update(connectionState);
         lastDisplayUpdate = now;

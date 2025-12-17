@@ -53,12 +53,23 @@ public:
             u8g2.drawStr(0, 60, buf);
         } else {
             // Не подключен
-            u8g2.drawStr(0, 12, "ExpressLRS RX");
+            char buf[32];
+            
+            // Строка 1: UID
+            const uint8_t* uid = config.GetUID();
+            snprintf(buf, sizeof(buf), "UID:%02X%02X%02X%02X%02X%02X", 
+                     uid[0], uid[1], uid[2], uid[3], uid[4], uid[5]);
+            u8g2.drawStr(0, 12, buf);
+            
+            // Строка 2
             u8g2.drawStr(0, 30, "Searching...");
             
-            char buf[32];
-            snprintf(buf, sizeof(buf), "Mode: %s", getFreqDomainStr());
-            u8g2.drawStr(0, 48, buf);
+            // Строка 3: Статус бинда
+            if (InBindingMode) {
+                u8g2.drawStr(0, 48, "Bind: ACTIVE");
+            } else {
+                u8g2.drawStr(0, 48, "Bind: OFF");
+            }
         }
         
         u8g2.sendBuffer();
