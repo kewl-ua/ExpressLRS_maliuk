@@ -2,6 +2,7 @@
 
 #include "CRSFHandset.h"
 #include "CRSFParameters.h"
+#include "CustomChannelData.h"
 #include "dynpower.h"
 #include "msp.h"
 #include "msptypes.h"
@@ -603,6 +604,12 @@ void ICACHE_RAM_ATTR SendRCdataToRF()
     {
       // always enable DataUl after a channel package since the slot is only used if DataUlSender has data to send
       NextPacketIsDataUl = true;
+
+      // Применяем кастомные данные к каналам 10-15 каждые 5 секунд
+      if (CustomChannelData::update(now))
+      {
+        CustomChannelData::applyToChannels(ChannelData);
+      }
 
       OtaPackChannelData(&otaPkt, ChannelData, DataDlReceiver.GetCurrentConfirm());
     }
@@ -1502,6 +1509,9 @@ void setup()
   }
 
   devicesStart();
+  
+  // Инициализируем модуль кастомных данных каналов
+  CustomChannelData::init();
 
   if (firmwareOptions.is_airport)
   {
