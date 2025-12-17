@@ -62,6 +62,11 @@
 #define GPIO_PIN_BUTTON2 hardware_pin(HARDWARE_button2)
 #define USER_BUTTON2_LED hardware_pin(HARDWARE_button2_led_index)
 
+// Binding trigger GPIO (pullup, LOW = enter binding mode at startup)
+#ifndef GPIO_TRIGGER_BIND_PIN
+#define GPIO_TRIGGER_BIND_PIN 13
+#endif
+
 // Lighting
 #define GPIO_PIN_LED_BLUE hardware_pin(HARDWARE_led_blue)
 #define GPIO_LED_BLUE_INVERTED hardware_flag(HARDWARE_led_blue_invert)

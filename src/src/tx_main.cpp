@@ -40,8 +40,6 @@ void sendMAVLinkTelemetryToBackpack(uint8_t *) {}
 #include <user_interface.h>
 #endif
 
-#define GPIO_TRIGGER_BIND_PIN 13 
-
 /// define some libs to use ///
 MSP msp;
 ELRS_EEPROM eeprom;
