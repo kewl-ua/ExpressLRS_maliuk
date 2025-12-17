@@ -101,13 +101,13 @@ void OLEDDisplay::displayIdleScreen(uint8_t changed, uint8_t rate_index, uint8_t
 
     u8g2->setFont(u8g2_font_t0_15_mr);
     
-    // Строка 1: UID
+    // 1st row: UID status 
     char buf[32];
     snprintf(buf, sizeof(buf), "UID:%02X%02X%02X%02X%02X%02X", 
              UID[0], UID[1], UID[2], UID[3], UID[4], UID[5]);
     u8g2->drawStr(0, 12, buf);
     
-    // Строка 2: Статус подключения
+    // 2nd row: Connection status 
     if (connectionState == radioFailed)
     {
         u8g2->drawStr(0, 30, "BAD RADIO");
@@ -125,16 +125,19 @@ void OLEDDisplay::displayIdleScreen(uint8_t changed, uint8_t rate_index, uint8_t
         u8g2->drawStr(0, 30, "Searching...");
     }
     
-    // Строка 3: Статус бинда
-    if (InBindingMode)
+    // 3rd row: Bind status
+    if (connectionState != connected)
     {
-        u8g2->drawStr(0, 48, "BIND: ACTIVE (TX)");
+        if (InBindingMode)
+        {
+            u8g2->drawStr(0, 48, "BIND: ACTIVE (TX)");
+        }
+        else
+        {
+            u8g2->drawStr(0, 48, "BIND: OFF (TX)");
+        }
     }
-    else
-    {
-        u8g2->drawStr(0, 48, "BIND: OFF (TX)");
-    }
-    
+
     u8g2->sendBuffer();
 }
 
