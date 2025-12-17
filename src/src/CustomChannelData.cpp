@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "CustomChannelData.h"
 #include "logging.h"
 
