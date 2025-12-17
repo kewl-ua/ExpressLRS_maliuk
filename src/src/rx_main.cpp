@@ -28,6 +28,8 @@
 #include "rx-serial/SerialDisplayport.h"
 #include "rx-serial/SerialGPS.h"
 
+#include "rx_oled_simple.h"
+
 #include "devAnalogVbat.h"
 #include "devBaro.h"
 #include "devButton.h"
@@ -109,6 +111,8 @@ RXOTAConnector otaConnector;
 
 bool crsfBatterySensorDetected = false;
 bool crsfBaroSensorDetected = false;
+
+RX_OLED_Display rxDisplay;
 
 unsigned long rebootTime = 0;
 extern bool webserverPreventAutoStart;
@@ -2021,6 +2025,8 @@ void setup()
         devicesInit();
 
         setupBindingFromConfig();
+        
+        rxDisplay.init();
 
         FHSSrandomiseFHSSsequence(uidMacSeedGet());
 
@@ -2054,6 +2060,13 @@ void loop()
 #endif
 {
     unsigned long now = millis();
+    
+    // Обновление OLED дисплея
+    static uint32_t lastDisplayUpdate = 0;
+    if (now - lastDisplayUpdate > 1000) {
+        rxDisplay.update(connectionState);
+        lastDisplayUpdate = now;
+    }
 
     if (DataUlReceiver.HasFinishedData())
     {

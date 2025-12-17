@@ -516,6 +516,8 @@ void ICACHE_RAM_ATTR SendRCdataToRF()
   // *Do* send data if a packet has never been received from handset and the timer is running
   // this is the case when bench testing and TXing without a handset
   bool dontSendChannelData = false;
+  // MODIFIED: Закомментировано чтобы TX передавал без handset для теста
+  /*
   uint32_t lastRcData = handset->GetRCdataLastRecv();
   if (lastRcData && (micros() - lastRcData > 1000000))
   {
@@ -530,6 +532,7 @@ void ICACHE_RAM_ATTR SendRCdataToRF()
       return;
     }
   }
+  */
 
   busyTransmitting = true;
 
