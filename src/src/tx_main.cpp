@@ -40,6 +40,8 @@ void sendMAVLinkTelemetryToBackpack(uint8_t *) {}
 #include <user_interface.h>
 #endif
 
+#define GPIO_TRIGGER_BIND_PIN 13 
+
 /// define some libs to use ///
 MSP msp;
 ELRS_EEPROM eeprom;
@@ -1486,6 +1488,20 @@ void setup()
 
   registerButtonFunction(ACTION_BIND, EnterBindingMode);
   registerButtonFunction(ACTION_INCREASE_POWER, cyclePower);
+
+  // Check GPIO0 at startup for binding mode
+  pinMode(GPIO_TRIGGER_BIND_PIN, INPUT_PULLUP);
+  delay(10);
+
+  if (digitalRead(GPIO_TRIGGER_BIND_PIN) == LOW)
+  {
+    char buffer[50];
+    snprintf(buffer, sizeof(buffer), "GPIO%d LOW at startup, entering binding mode", TRIGGER_BIND_PIN);
+    DBGLN(buffer);
+
+    delay(100); // Small delay to ensure stable reading
+    EnterBindingMode();
+  }
 
   devicesStart();
 

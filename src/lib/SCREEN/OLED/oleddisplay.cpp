@@ -13,6 +13,9 @@
 #include "WiFi.h"
 extern WiFiMode_t wifiMode;
 
+#include "config.h"
+extern TxConfig config;
+
 // OLED specific header files.
 U8G2 *u8g2;
 
@@ -97,34 +100,41 @@ void OLEDDisplay::displayIdleScreen(uint8_t changed, uint8_t rate_index, uint8_t
     }
 
     u8g2->setFont(u8g2_font_t0_15_mr);
+    
+    // Строка 1: UID
+    char buf[32];
+    snprintf(buf, sizeof(buf), "UID:%02X%02X%02X%02X%02X%02X", 
+             UID[0], UID[1], UID[2], UID[3], UID[4], UID[5]);
+    u8g2->drawStr(0, 12, buf);
+    
+    // Строка 2: Статус подключения
     if (connectionState == radioFailed)
     {
-        drawCentered(15, "BAD");
-        drawCentered(32, "RADIO");
+        u8g2->drawStr(0, 30, "BAD RADIO");
     }
     else if (connectionState == noCrossfire)
     {
-        drawCentered(15, "NO");
-        drawCentered(32, "HANDSET");
+        u8g2->drawStr(0, 30, "NO HANDSET");
     }
-    else if (OPT_HAS_OLED_SPI_SMALL)
+    else if (connectionState == connected)
     {
-        u8g2->drawStr(0, 15, getValue(STATE_PACKET, rate_index));
-        u8g2->drawStr(70, 15, getValue(STATE_TELEMETRY_CURR, ratio_index));
-        u8g2->drawStr(0, 32, power.c_str());
-        u8g2->drawStr(70, 32, version);
+        u8g2->drawStr(0, 30, "Connected");
     }
     else
     {
-        u8g2->drawStr(0, 13, message_string[message_index]);
-        u8g2->drawStr(0, 45, getValue(STATE_PACKET, rate_index));
-        u8g2->drawStr(70, 45, getValue(STATE_TELEMETRY_CURR, ratio_index));
-        u8g2->drawStr(0, 60, power.c_str());
-        u8g2->setFont(u8g2_font_profont10_mr);
-        u8g2->drawStr(70, 56, "TLM");
-        u8g2->drawStr(0, 27, "Ver: ");
-        u8g2->drawStr(38, 27, version);
+        u8g2->drawStr(0, 30, "Searching...");
     }
+    
+    // Строка 3: Статус бинда
+    if (InBindingMode)
+    {
+        u8g2->drawStr(0, 48, "BIND: ACTIVE (TX)");
+    }
+    else
+    {
+        u8g2->drawStr(0, 48, "BIND: OFF (TX)");
+    }
+    
     u8g2->sendBuffer();
 }
 

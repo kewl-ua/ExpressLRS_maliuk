@@ -66,9 +66,9 @@ public:
             
             // Строка 3: Статус бинда
             if (InBindingMode) {
-                u8g2.drawStr(0, 48, "Bind: ACTIVE");
+                u8g2.drawStr(0, 48, "BIND: ACTIVE (RX)");
             } else {
-                u8g2.drawStr(0, 48, "Bind: OFF");
+                u8g2.drawStr(0, 48, "BIND: OFF (RX)");
             }
         }
         
