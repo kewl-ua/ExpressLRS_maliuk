@@ -100,6 +100,29 @@ device_affinity_t ui_devices[] = {
 uint8_t antenna = 0;    // which antenna is currently in use
 uint8_t geminiMode = 0;
 
+// Multi-TX tracking system
+#define MAX_TX_COUNT 3
+struct TxInfo {
+    int16_t rssi_1;      // RSSI from antenna 1
+    int16_t rssi_2;      // RSSI from antenna 2
+    uint32_t lastSeen;   // Last time packet received from this TX
+    bool active;         // Is this TX slot active
+};
+
+// UID для каждого TX - ЗАМЕНИТЕ НА СВОИ ЗНАЧЕНИЯ!
+// Получите UID из каждого TX через веб-интерфейс или CLI
+const uint8_t TX_UIDS[MAX_TX_COUNT][UID_LEN] = {
+    {0xF8, 0x69, 0x36, 0xCE, 0x60, 0xF1},  // TX1 UID
+    {0x00, 0x00, 0x55, 0x66, 0x77, 0x88},  // TX2 - замените на реальный UID
+    {0x00, 0x00, 0x99, 0xAA, 0xBB, 0xCC}   // TX3 - замените на реальный UID
+};
+
+TxInfo txArray[MAX_TX_COUNT];
+uint8_t currentTxIndex = 0;          // Currently active TX (0-2)
+uint32_t txSwitchInterval = 5000;    // Switch TX every 5 seconds
+uint32_t lastTxSwitchTime = 0;
+bool needToSwitchTx = false;         // Flag to trigger TX switch
+
 PFD PFDloop;
 Crc2Byte ota_crc;
 ELRS_EEPROM eeprom;
@@ -295,6 +318,14 @@ void ICACHE_RAM_ATTR getRFlinkInfo()
     //linkStats.uplink_Link_quality = uplinkLQ; // handled in Tick
     linkStats.rf_Mode = ExpressLRS_currAirRate_Modparams->enum_rate;
     //DBGLN(linkStats.uplink_RSSI_1);
+    
+    // Update TX info for multi-TX tracking
+    if (currentTxIndex < MAX_TX_COUNT) {
+        txArray[currentTxIndex].rssi_1 = linkStats.uplink_RSSI_1;
+        txArray[currentTxIndex].rssi_2 = linkStats.uplink_RSSI_2;
+        txArray[currentTxIndex].lastSeen = millis();
+        txArray[currentTxIndex].active = true;
+    }
     #if defined(DEBUG_BF_LINK_STATS)
     linkStats.downlink_RSSI_1 = debug1;
     linkStats.downlink_Link_quality = debug2;
@@ -2026,6 +2057,21 @@ void setup()
 
         setupBindingFromConfig();
         
+        // Initialize multi-TX tracking array
+        for (uint8_t i = 0; i < MAX_TX_COUNT; i++) {
+            txArray[i].rssi_1 = 0;
+            txArray[i].rssi_2 = 0;
+            txArray[i].lastSeen = 0;
+            txArray[i].active = false;
+        }
+        lastTxSwitchTime = millis();
+        needToSwitchTx = false;
+        
+        // Загружаем UID первого TX (currentTxIndex = 0)
+        memcpy(UID, TX_UIDS[currentTxIndex], UID_LEN);
+        config.SetUID(UID);
+        DBGLN("Starting with TX%u", currentTxIndex + 1);
+        
         rxDisplay.init();
 
         FHSSrandomiseFHSSsequence(uidMacSeedGet());
@@ -2061,11 +2107,42 @@ void loop()
 {
     unsigned long now = millis();
     
+    // Multi-TX switching logic
+    if (now - lastTxSwitchTime > txSwitchInterval) {
+        needToSwitchTx = true;
+        lastTxSwitchTime = now;
+    }
+    
+    // Perform TX switch when we are in disconnected state
+    if (needToSwitchTx && connectionState == disconnected) {
+        // Switch to next TX
+        currentTxIndex = (currentTxIndex + 1) % MAX_TX_COUNT;
+        
+        // Load new UID from the TX_UIDS array
+        memcpy(UID, TX_UIDS[currentTxIndex], UID_LEN);
+        
+        // Update config with new UID (needed for FHSS and sync)
+        config.SetUID(UID);
+        OtaUpdateCrcInitFromUid();
+        FHSSrandomiseFHSSsequence(uidMacSeedGet());
+        
+        DBGLN("Switched to TX%u, UID=(%u,%u,%u,%u,%u,%u)", 
+              currentTxIndex + 1, UID[0], UID[1], UID[2], UID[3], UID[4], UID[5]);
+        
+        needToSwitchTx = false;
+    }
+    
+    // If we're connected but need to switch, disconnect first
+    if (needToSwitchTx && connectionState == connected) {
+        DBGLN("Disconnecting to switch TX...");
+        LostConnection(true);
+    }
+    
     // Обновление OLED дисплея
     static uint32_t lastDisplayUpdate = 0;
 
     if (now - lastDisplayUpdate > 1000) {
-        rxDisplay.update(connectionState);
+        rxDisplay.update(connectionState, txArray, currentTxIndex);
         lastDisplayUpdate = now;
     }
 
