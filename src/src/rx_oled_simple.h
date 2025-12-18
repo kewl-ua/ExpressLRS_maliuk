@@ -7,8 +7,13 @@
 #define TTGO_V2_OLED_SDA_PIN 21
 #define TTGO_V2_OLED_SCL_PIN 22
 
-// Forward declaration
-struct TxInfo;
+// Multi-TX tracking structure
+struct TxInfo {
+    int16_t rssi_1;      // RSSI from antenna 1
+    int16_t rssi_2;      // RSSI from antenna 2
+    uint32_t lastSeen;   // Last time packet received from this TX
+    bool active;         // Is this TX slot active
+};
 
 class RX_OLED_Display {
 private:

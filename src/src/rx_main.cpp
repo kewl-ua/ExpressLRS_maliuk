@@ -102,22 +102,17 @@ uint8_t geminiMode = 0;
 
 // Multi-TX tracking system
 #define MAX_TX_COUNT 3
-struct TxInfo {
-    int16_t rssi_1;      // RSSI from antenna 1
-    int16_t rssi_2;      // RSSI from antenna 2
-    uint32_t lastSeen;   // Last time packet received from this TX
-    bool active;         // Is this TX slot active
-};
+// TxInfo структура определена в rx_oled_simple.h
 
 // UID для каждого TX - ЗАМЕНИТЕ НА СВОИ ЗНАЧЕНИЯ!
 // Получите UID из каждого TX через веб-интерфейс или CLI
 const uint8_t TX_UIDS[MAX_TX_COUNT][UID_LEN] = {
-    {0xF8, 0x69, 0x36, 0xCE, 0x60, 0xF1},  // TX1 UID
-    {0x00, 0x00, 0x55, 0x66, 0x77, 0x88},  // TX2 - замените на реальный UID
-    {0x00, 0x00, 0x99, 0xAA, 0xBB, 0xCC}   // TX3 - замените на реальный UID
+    {0x58, 0xC3, 0x06, 0x09, 0x50, 0xB2},  // TX1 UID
+    {0x24, 0x69, 0x8E, 0x52, 0xA5, 0xDE},  // TX2 - замените на реальный UID
+    {0xB2, 0xA7, 0x02, 0x2B, 0x75, 0x0C}   // TX3 - замените на реальный UID
 };
 
-TxInfo txArray[MAX_TX_COUNT];
+TxInfo txArray[MAX_TX_COUNT]; // Declaration
 uint8_t currentTxIndex = 0;          // Currently active TX (0-2)
 uint32_t txSwitchInterval = 5000;    // Switch TX every 5 seconds
 uint32_t lastTxSwitchTime = 0;
